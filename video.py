@@ -15,6 +15,7 @@ from datetime import datetime
 import base64
 from PIL import Image, ImageFile
 import math
+import subprocess
 
 debug = 0
 
@@ -181,7 +182,16 @@ class Video:
                     # now = datetime.now()
                     # self.myCamera.capture(
                     #     '/home/pi/Urgence/images/image' + now.strftime("%Y%m%d-%H%M%S") + '.jpg')
-                    self.webservice.alarm(camera_id, imageBase64)
+
+                    # self.webservice.alarm(camera_id, imageBase64)
+
+                    # get predict form ML
+                    # txt = str("test")+'.sh'
+                    # file = open(txt, "w")
+                    # print('python3 - m tensorflow-for-poets-2.scripts.label_image - -image = tf_files/data_set/collapsed/download.jpeg - -input_height = 299 - -input_width = 299 - -graph = retrained_graph.pb - -labels = retrained_labels.txt - -input_layer = "Mul" - -output_layer = "final_result"', file=open(txt, "a"))
+
+                    self.getPrediction()
+
                     person.alarmReported = 1
 
                     # capture camera
@@ -270,3 +280,19 @@ class Video:
         except IOError:
             ImageFile.MAXBLOCK = width * height
             im.save(pic, optimize=True, quality=75)
+
+    # get prediction from ML
+    def getPrediction(self):
+        # create command
+        cmd = "python3 -m tensorflow-for-poets-2.scripts.label_image --image=tensorflow-for-poets-2/tf_files/data_set/collapsed/download.jpeg --graph=tensorflow-for-poets-2/tf_files/retrained_graph.pb --labels=tensorflow-for-poets-2/tf_files/retrained_labels.txt"
+        # cmd = ["chmod u+x tensorflow-for-poets-2/scripts/label_image.py",
+        # "tensorflow-for-poets-2/scripts/label_image.py --image=tensorflow-for-poets-2/tf_files/data_set/collapsed/download.jpeg --graph=tensorflow-for-poets-2/tf_files/retrained_graph.pb --labels=tensorflow-for-poets-2/tf_files/retrained_labels.txt"]
+
+        # run command
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+
+        (output, err) = p.communicate()
+
+        p_status = p.wait()
+
+        print "Command output : ", output

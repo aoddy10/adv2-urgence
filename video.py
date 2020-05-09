@@ -172,33 +172,25 @@ class Video:
                 detectStatus = "Alarm, not moving"
                 if not person.alarmReported:
                     print('Not moving')
-                    imageFileLocation = self.captureImage()
-                    camera_id = self.getSerial()
-                    self.reduceImageSize(imageFileLocation)
-                    imageBase64 = self.convertImageToBase64(imageFileLocation)
-
-                    # stop 2 second and move next to next capture
-                    # time.sleep(2)
-                    # now = datetime.now()
-                    # self.myCamera.capture(
-                    #     '/home/pi/Urgence/images/image' + now.strftime("%Y%m%d-%H%M%S") + '.jpg')
-
-                    # self.webservice.alarm(camera_id, imageBase64)
-
-                    # get predict form ML
-                    # txt = str("test")+'.sh'
-                    # file = open(txt, "w")
-                    # print('python3 - m tensorflow-for-poets-2.scripts.label_image - -image = tf_files/data_set/collapsed/download.jpeg - -input_height = 299 - -input_width = 299 - -graph = retrained_graph.pb - -labels = retrained_labels.txt - -input_layer = "Mul" - -output_layer = "final_result"', file=open(txt, "a"))
-
-                    self.getPrediction()
-
                     person.alarmReported = 1
 
-                    # capture camera
+                    # capture image
+                    imageFileLocation = self.captureImage()
 
-                    # send to webserver
+                    predictResult = self.getPrediction(imageFileLocation)
+                    # predictResult = self.getPrediction('./images/test.jpg')
 
-                    # sleep for 1 minute then detect again
+                    if float(predictResult) > 0.8:
+                        # get camera_id
+                        camera_id = self.getSerial()
+                        # reduce image size and encode to base64
+                        self.reduceImageSize(imageFileLocation)
+                        imageBase64 = self.convertImageToBase64(
+                            imageFileLocation)
+
+                        # send image to API
+                        self.webservice.alarm(camera_id, imageBase64)
+                        # print('Send to API Server')
 
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), color, 2)
             cv2.putText(self.frame, "{}".format(cv2.contourArea(contour)),
@@ -232,7 +224,7 @@ class Video:
             ret, frame = self.camera.read()
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
 
-            cv2.imshow('frame', rgb)
+            # cv2.imshow('frame', rgb)
 
             now = datetime.now()
             # create file location
@@ -282,9 +274,15 @@ class Video:
             im.save(pic, optimize=True, quality=75)
 
     # get prediction from ML
-    def getPrediction(self):
+    def getPrediction(self, sourceFileLocation):
+        # ML model location
+        modelPb = "tensorflow-for-poets-2/tf_files/retrained_graph.pb"
+        modelLabels = "tensorflow-for-poets-2/tf_files/retrained_labels.txt"
+
         # create command
-        cmd = "python3 -m tensorflow-for-poets-2.scripts.label_image --image=tensorflow-for-poets-2/tf_files/data_set/collapsed/download.jpeg --graph=tensorflow-for-poets-2/tf_files/retrained_graph.pb --labels=tensorflow-for-poets-2/tf_files/retrained_labels.txt"
+        cmd = "python3 -m tensorflow-for-poets-2.scripts.label_image --image=" + \
+            sourceFileLocation + " --graph=" + modelPb + " --labels=" + modelLabels
+
         # cmd = ["chmod u+x tensorflow-for-poets-2/scripts/label_image.py",
         # "tensorflow-for-poets-2/scripts/label_image.py --image=tensorflow-for-poets-2/tf_files/data_set/collapsed/download.jpeg --graph=tensorflow-for-poets-2/tf_files/retrained_graph.pb --labels=tensorflow-for-poets-2/tf_files/retrained_labels.txt"]
 
@@ -295,4 +293,6 @@ class Video:
 
         p_status = p.wait()
 
-        print "Command output : ", output
+        # print "Command output : ", output
+        print output
+        return output

@@ -16,6 +16,7 @@ import base64
 from PIL import Image, ImageFile
 import math
 import subprocess
+import json
 
 debug = 0
 
@@ -30,7 +31,7 @@ class Video:
         self.persons = person.Persons(
             self.settings.movementMaximum, self.settings.movementMinimum, self.settings.movementTime)
         self.start = time.time()
-        self.webservice = webservice.Webservice(self.settings.place)
+        self.webservice = webservice.Webservice()
         self.errorcount = 0
         self.alertLog = []
         self.frameCount = 1
@@ -296,3 +297,20 @@ class Video:
         # print "Command output : ", output
         print output
         return output
+
+    def checkUpdateVersion(self):
+        device_id = self.getSerial()
+        requireUpdateDetail = self.webservice.checkVersion(device_id)
+
+        print(requireUpdateDetail["error"])
+        print(requireUpdateDetail["require_update"])
+
+        # check if it need to update
+        if requireUpdateDetail["error"] == False and requireUpdateDetail["require_update"] == True:
+            # load file for update
+            updateFile_url = requireUpdateDetail["file_url"]
+            # unzip befor replace in folder
+            print('get file and unzip before replace in folder')
+
+        else:
+            print('Do not need to update')

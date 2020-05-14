@@ -17,8 +17,8 @@ class Webservice():
                         'Content-Type': 'application/json'}
         self.data = ''
 
-    def alarm(self, camera_id, image_binary):
-        payload = {'camera_id': camera_id, 'image_binary': image_binary}
+    def alarm(self, device_id, image_binary):
+        payload = {'device_id': device_id, 'image_binary': image_binary}
         response = requests.post(
             self.url + 'camera', data=json.dumps(payload), headers=self.headers)  # use json.dumps to send data in json format
         print(response)
@@ -27,4 +27,10 @@ class Webservice():
         payload = {'device_id': device_id}
         response = requests.post(
             self.url + 'version', data=json.dumps(payload), headers=self.headers)  # use json.dumps to send data in json format
+        return response.json()
+
+    def updateVersion(self, device_id, version_id):
+        payload = {'device_id': device_id, 'version_id': version_id}
+        response = requests.post(
+            self.url + 'updated', data=json.dumps(payload), headers=self.headers)  # use json.dumps to send data in json format
         return response.json()

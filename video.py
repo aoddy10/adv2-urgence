@@ -17,6 +17,8 @@ from PIL import Image, ImageFile
 import math
 import subprocess
 import json
+import urllib
+from zipfile import ZipFile
 
 debug = 0
 
@@ -181,16 +183,16 @@ class Video:
                     predictResult = self.getPrediction(imageFileLocation)
                     # predictResult = self.getPrediction('./images/test.jpg')
 
-                    if float(predictResult) > 0.8:
+                    if float(predictResult) > 0.9:
                         # get camera_id
-                        camera_id = self.getSerial()
+                        device_id = self.getSerial()
                         # reduce image size and encode to base64
                         self.reduceImageSize(imageFileLocation)
                         imageBase64 = self.convertImageToBase64(
                             imageFileLocation)
 
                         # send image to API
-                        self.webservice.alarm(camera_id, imageBase64)
+                        self.webservice.alarm(device_id, imageBase64)
                         # print('Send to API Server')
 
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), color, 2)
@@ -299,18 +301,70 @@ class Video:
         return output
 
     def checkUpdateVersion(self):
+        print('Check to update software.')
+
         device_id = self.getSerial()
         requireUpdateDetail = self.webservice.checkVersion(device_id)
 
-        print(requireUpdateDetail["error"])
-        print(requireUpdateDetail["require_update"])
-
         # check if it need to update
         if requireUpdateDetail["error"] == False and requireUpdateDetail["require_update"] == True:
+            print('Need to update new version: ' +
+                  requireUpdateDetail["new_version"])
+
             # load file for update
             updateFile_url = requireUpdateDetail["file_url"]
-            # unzip befor replace in folder
-            print('get file and unzip before replace in folder')
+
+            # download file
+            print('download file from server...')
+            self.downloadFile(updateFile_url)
+
+            # unzip update.zip and extract to ML folder
+            print('Unzip update file and extract to ML location...')
+            self.extractUpdateFile()
+
+            # update software verion in database
+            print('Updated software version on database...')
+            updateResponse = self.webservice.updateVersion(
+                device_id, requireUpdateDetail["new_version"])
+            if updateResponse["error"] == False:
+                print('Update vesion on database....successful.')
+            else:
+                print('Update vesion on database....fail.')
 
         else:
-            print('Do not need to update')
+            print("Don't have new version to update.")
+
+    def downloadFile(self, url):
+
+        # file_name = url.split('/')[-1]
+        file_name = 'update.zip'
+        u = urllib.urlopen(url)
+        f = open(file_name, 'wb')
+        meta = u.info()
+        file_size = int(meta.getheaders("Content-Length")[0])
+        print "Downloading: %s Bytes: %s" % (file_name, file_size)
+
+        file_size_dl = 0
+        block_sz = 8192
+        while True:
+            buffer = u.read(block_sz)
+            if not buffer:
+                break
+
+            file_size_dl += len(buffer)
+            f.write(buffer)
+            status = r"%10d  [%3.2f%%]" % (
+                file_size_dl, file_size_dl * 100. / file_size)
+            status = status + chr(8)*(len(status)+1)
+            print status,
+
+        print('')
+        print('Finish download')
+        f.close()
+        return True
+
+    def extractUpdateFile(self):
+        zf = ZipFile('update.zip', 'r')
+        zf.extractall('./tensorflow-for-poets-2/tf_files/')
+        zf.close()
+        print('Finish extract and update file in ML location.')

@@ -26,5 +26,5 @@ while 1:
 
     # reset required update every midnight
     now = datetime.now()
-    if now.strftime("%H%M%S") == '120000':
+    if now.strftime("%H%M%S") == '000000':
         isRequireUpdateCheck = True

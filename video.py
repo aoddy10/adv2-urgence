@@ -1,11 +1,3 @@
-# Fall detector video class
-# Source: camera (int) or file (string)
-#
-#
-# Kim Salmi, kim.salmi(at)iki(dot)fi
-# http://tunn.us/arduino/falldetector.php
-# License: GPLv3
-
 import time
 import cv2
 import person
@@ -19,6 +11,7 @@ import subprocess
 import json
 import urllib
 from zipfile import ZipFile
+import os
 
 debug = 0
 
@@ -192,8 +185,11 @@ class Video:
                             imageFileLocation)
 
                         # send image to API
+                        print('send alert to api with image data and device id')
                         self.webservice.alarm(device_id, imageBase64)
-                        # print('Send to API Server')
+
+                    # delete file in images folder
+                    os.remove(imageFileLocation)
 
             cv2.rectangle(self.frame, (x, y), (x + w, y + h), color, 2)
             cv2.putText(self.frame, "{}".format(cv2.contourArea(contour)),
@@ -227,7 +223,7 @@ class Video:
             ret, frame = self.camera.read()
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
 
-            # cv2.imshow('frame', rgb)
+            # cv2.imshow('frame', rgb) # show capture image
 
             now = datetime.now()
             # create file location
@@ -265,6 +261,7 @@ class Video:
 
         resizeRatio = 250/width
 
+        # if width and height more than 1000, do resize
         if width > 1000 or height > 1000:
             width = width*resizeRatio
             height = height*resizeRatio
@@ -286,9 +283,6 @@ class Video:
         cmd = "python3 -m tensorflow-for-poets-2.scripts.label_image --image=" + \
             sourceFileLocation + " --graph=" + modelPb + " --labels=" + modelLabels
 
-        # cmd = ["chmod u+x tensorflow-for-poets-2/scripts/label_image.py",
-        # "tensorflow-for-poets-2/scripts/label_image.py --image=tensorflow-for-poets-2/tf_files/data_set/collapsed/download.jpeg --graph=tensorflow-for-poets-2/tf_files/retrained_graph.pb --labels=tensorflow-for-poets-2/tf_files/retrained_labels.txt"]
-
         # run command
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
 
@@ -297,7 +291,7 @@ class Video:
         p_status = p.wait()
 
         # print "Command output : ", output
-        print output
+        print('result: ', output)
         return output
 
     def checkUpdateVersion(self):
@@ -335,8 +329,6 @@ class Video:
             print("Don't have new version to update.")
 
     def downloadFile(self, url):
-
-        # file_name = url.split('/')[-1]
         file_name = 'update.zip'
         u = urllib.urlopen(url)
         f = open(file_name, 'wb')

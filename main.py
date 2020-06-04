@@ -23,3 +23,8 @@ while 1:
     video.testSettings()
     if video.testDestroy():
         sys.exit()
+
+    # reset required update every midnight
+    now = datetime.now()
+    if now.strftime("%H%M%S") == '120000':
+        isRequireUpdateCheck = True

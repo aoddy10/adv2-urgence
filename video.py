@@ -167,7 +167,7 @@ class Video:
                 cv2.line(self.frame, (x + w, y), (x, y + h), color, 2)
                 detectStatus = "Alarm, not moving"
                 if not person.alarmReported:
-                    print('Not moving')
+                    print('Not moving detected')
                     person.alarmReported = 1
 
                     # capture image
@@ -291,7 +291,7 @@ class Video:
         p_status = p.wait()
 
         # print "Command output : ", output
-        print('result: ', output)
+        print(output)
         return output
 
     def checkUpdateVersion(self):

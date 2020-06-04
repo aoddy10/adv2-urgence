@@ -1,6 +1,7 @@
 import video
 import time
 import sys
+from datetime import datetime
 
 video = video.Video(0)
 time.sleep(1.0)  # autofocus and autosaturation

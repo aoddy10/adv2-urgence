@@ -219,6 +219,7 @@ class Video:
     # capture image
     def captureImage(self):
         fileLocation = ""
+        print 'Capture image...'
         while(True):
             ret, frame = self.camera.read()
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
@@ -275,6 +276,7 @@ class Video:
 
     # get prediction from ML
     def getPrediction(self, sourceFileLocation):
+        print 'Get predict from ML...'
         # ML model location
         modelPb = "tensorflow-for-poets-2/tf_files/retrained_graph.pb"
         modelLabels = "tensorflow-for-poets-2/tf_files/retrained_labels.txt"
@@ -290,12 +292,13 @@ class Video:
 
         p_status = p.wait()
 
-        # print "Command output : ", output
-        print(output)
+        print "Command output : ", output
+        # print 'result:'
+        # print(output)
         return output
 
     def checkUpdateVersion(self):
-        print('Check to update software.')
+        print('Check to software update...')
 
         device_id = self.getSerial()
         requireUpdateDetail = self.webservice.checkVersion(device_id)
@@ -326,7 +329,7 @@ class Video:
                 print('Update vesion on database....fail.')
 
         else:
-            print("Don't have new version to update.")
+            print("Don't have new version to update.\n")
 
     def downloadFile(self, url):
         file_name = 'update.zip'

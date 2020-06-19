@@ -22,6 +22,7 @@ class Webservice():
         response = requests.post(
             self.url + 'camera', data=json.dumps(payload), headers=self.headers)  # use json.dumps to send data in json format
         print(response)
+        print ''
 
     def checkVersion(self, device_id):
         payload = {'device_id': device_id}

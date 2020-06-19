@@ -235,6 +235,7 @@ class Video:
 
     # convert image to base64
     def convertImageToBase64(self, imageFileLocation):
+        print 'Convert image to Base64'
         with open(imageFileLocation, "rb") as img_file:
             my_string = base64.b64encode(img_file.read())
         return my_string.decode('utf-8')
@@ -256,6 +257,7 @@ class Video:
 
     # resize image to 250px
     def reduceImageSize(self, imageFileLocation):
+        print 'Resize image...'
         pic = imageFileLocation
         im = Image.open(pic)
         width, height = im.size
@@ -276,7 +278,7 @@ class Video:
 
     # get prediction from ML
     def getPrediction(self, sourceFileLocation):
-        print 'Get predict from ML...'
+        print 'Analyse by ML...'
         # ML model location
         modelPb = "tensorflow-for-poets-2/tf_files/retrained_graph.pb"
         modelLabels = "tensorflow-for-poets-2/tf_files/retrained_labels.txt"
@@ -293,8 +295,6 @@ class Video:
         p_status = p.wait()
 
         print "Command output : ", output
-        # print 'result:'
-        # print(output)
         return output
 
     def checkUpdateVersion(self):
